@@ -1,0 +1,225 @@
+{
+  "_說明": "工具選擇器的人工例句教材。single：這句話最該用哪個工具；multi：一句話需要多個工具。想讓某個工具更容易被選中，就在這裡多加幾句你平常會講的話，再執行 python scripts/train_tool_router.py。",
+  "single": {
+    "__none__": [
+      "你好", "早安", "謝謝你", "你是誰", "你會做什麼", "解釋一下什麼是量子力學", "一加一等於多少",
+      "幫我想一個生日祝福", "這句英文怎麼翻譯", "講個笑話", "推薦一本好書", "遞迴是什麼意思",
+      "幫我把這段話改得更禮貌", "寫一首關於秋天的詩", "python 的 list 跟 tuple 差在哪", "哈哈好喔", "剛剛那個再說一次"
+    ],
+    "inspect_accessibility_tree": [
+      "看一下這個視窗裡有哪些按鈕", "列出記事本視窗的所有控制項", "這個程式的介面有哪些欄位可以填",
+      "找出設定視窗裡的輸入框", "分析一下這個軟體的介面結構", "這個對話框上面有什麼選項", "幫我看這個 app 的選單有哪些"
+    ],
+    "ui_invoke": [
+      "幫我按下確定按鈕", "點那個儲存鈕", "按一下視窗上的下一步", "幫我按取消", "按下安裝按鈕", "把那個核取方塊勾起來"
+    ],
+    "ui_type": [
+      "在記事本的編輯區輸入今天的會議記錄", "把這段文字填進那個輸入框", "在搜尋欄位打上報表", "幫我在檔名欄位填 report",
+      "把姓名欄填成王小明", "在那個視窗的文字框寫上測試"
+    ],
+    "ui_click": [
+      "對那個項目按右鍵", "在檔案清單的第一個項目點兩下", "雙擊那個圖示", "點一下左邊選單的設定", "用滑鼠點那個分頁標籤"
+    ],
+    "ui_read_text": [
+      "把記事本裡的內容讀出來", "讀取那個編輯器視窗裡的全文", "幫我看 word 視窗裡寫了什麼", "把那個文件視窗的文字抓下來",
+      "那個視窗裡的文章內容是什麼"
+    ],
+    "list_windows": [
+      "我現在開了哪些視窗", "列出所有開著的視窗", "現在桌面上有哪些程式在跑", "幫我看有沒有開著 chrome 視窗",
+      "目前開了幾個視窗", "有哪些應用程式是開著的"
+    ],
+    "inspect_window_background": [
+      "不要切換視窗，偷看一下 vscode 現在畫面是什麼", "在背景看一下那個視窗跑到哪了", "幫我看另一個視窗的進度但不要搶焦點",
+      "那個縮小的視窗現在顯示什麼", "背景檢查一下下載視窗好了沒"
+    ],
+    "capture_desktop_screen": [
+      "看一下我的畫面", "截圖看看現在螢幕上有什麼", "你看得到我的螢幕嗎", "幫我看螢幕上這個錯誤訊息",
+      "現在畫面上顯示什麼", "看我桌面", "幫我截個圖"
+    ],
+    "click_screen": [
+      "點螢幕座標 500 300", "幫我點畫面右上角的叉叉", "用滑鼠點一下畫面中間", "點那個紅色按鈕的位置", "滑鼠移過去點一下那裡"
+    ],
+    "type_text": [
+      "幫我打字輸入 hello world", "在現在游標的位置輸入這段話", "幫我打上我的地址然後按 enter", "輸入這串文字並送出",
+      "幫我把這句話打進去"
+    ],
+    "send_ide_feedback": [
+      "把這個錯誤回報給正在寫程式的 AI", "把檢查到的問題貼回那個 AI 對話視窗", "跟被監督的 AI 說它這段寫錯了要改",
+      "把修正指示送回 IDE 的對話框", "回饋給那個視窗的 AI 叫它重做"
+    ],
+    "dispatch_ai_coding_prompt": [
+      "叫 claude 幫我寫一個排序函式", "打開claude在裡面輸入嗨", "請 cursor 重構這個專案", "叫 antigravity 修這個 bug",
+      "把這個需求派給 codex", "在 vscode 的 AI 對話框送出提示詞", "跟 claude code 說幫我加單元測試",
+      "叫 antigravity 做一個登入頁面", "幫我對 cursor 下提示詞", "打開claude軟體在裡面說句測試成功並發送"
+    ],
+    "list_installed_software": [
+      "我電腦裝了哪些軟體", "有沒有安裝 photoshop", "這台電腦有 line 嗎", "列出已安裝的程式", "查一下我有沒有裝 steam",
+      "我有哪些 app 可以用", "電腦裡有沒有 office"
+    ],
+    "launch_application": [
+      "打開記事本", "開啟 vscode", "幫我開 chrome", "啟動 spotify", "把小算盤打開", "開一下 line", "幫我打開檔案總管",
+      "開啟 discord", "打開 excel"
+    ],
+    "run_background_shell": [
+      "跑一下 pytest", "執行 git status", "幫我用 powershell 看這個資料夾有哪些檔案", "跑 python main.py 看有沒有錯",
+      "幫我 pip install requests", "檢查這個 py 檔語法有沒有錯", "看一下 git log 最近五筆", "幫我跑測試",
+      "查一下我的 ip 位址", "看現在磁碟剩多少空間", "執行 npm run build"
+    ],
+    "run_linux_shell": [
+      "用 grep 找專案裡所有的 TODO", "用 linux 指令列出檔案 ls -la", "用 find 找出所有 py 檔", "用 wc 算這個檔案幾行",
+      "用 bash 跑這個腳本", "cat 一下 readme", "用 sed 把檔案裡的 foo 換成 bar", "grep -rn error ."
+    ],
+    "web_search": [
+      "上網查一下今天的新聞", "搜尋 python 3.13 有什麼新功能", "幫我查台北明天天氣", "找一下這個錯誤訊息的解法",
+      "google 一下 rtx 5090 價格", "查查看最近的 AI 新聞", "幫我找這個套件的官方文件", "現在美金匯率多少",
+      "幫我搜尋樹莓派教學", "查一下這部電影的評價"
+    ],
+    "web_fetch": [
+      "幫我讀這個網址的內容 https://example.com", "把這篇文章的重點整理給我 https://news.site/a", "這個連結在講什麼",
+      "讀一下這個網頁然後摘要", "抓這個 url 的內文", "幫我看這個 github 頁面的 readme"
+    ],
+    "notify_discord": [
+      "做完之後用 discord 通知我", "傳 discord 訊息跟我說結果", "發個 discord 通知", "跑完測試 dc 敲我一下",
+      "用 discord 提醒我"
+    ],
+    "cdr_sanitize_file": [
+      "幫我把這個下載的 pdf 消毒一下", "這個外面拿到的 word 檔安全嗎，先清理過", "把這張圖片的隱藏資料清掉",
+      "淨化這個壓縮檔再給我開"
+    ],
+    "sandbox_execute": [
+      "在沙箱裡跑這段程式", "用隔離環境執行這個腳本", "這段 code 不確定安不安全，放沙箱跑", "在沙盒測試這個 python 程式"
+    ],
+    "scan_antivirus": [
+      "幫我掃毒", "掃描一下這個檔案有沒有病毒", "電腦好像中毒了幫我檢查", "用 defender 掃這個資料夾", "這個 exe 安全嗎幫我掃一下"
+    ],
+    "audit_system_security": [
+      "檢查開機啟動項有沒有怪東西", "看看有哪些程式會開機自動執行", "幫我做系統安全稽核", "檢查一下隔離區有什麼"
+    ],
+    "configure_api_provider": [
+      "幫我新增一個 API 供應商", "設定 openai 相容的 api 端點", "我要加一個新的模型服務", "把 deepseek 的 api 設定加進來",
+      "新增 nvidia nim 的連線設定"
+    ],
+    "install_skill": [
+      "幫我安裝一個新技能", "把這個 skill 裝起來", "新增一個技能模組", "安裝這個技能包", "我想加一個新的 skill"
+    ],
+    "run_skill_script": [
+      "執行那個技能的腳本", "用已安裝的技能跑一下", "跑 skill 裡面的 script", "呼叫那個技能幫我處理", "用技能模組執行這個任務"
+    ],
+    "list_installed_skills": [
+      "我有哪些技能", "列出已安裝的 skill", "現在有什麼技能可以用", "技能清單給我看", "裝了哪些技能模組"
+    ],
+    "browser_navigate": [
+      "用瀏覽器打開 youtube", "開啟這個網站 github.com", "幫我連到 google 首頁", "瀏覽器前往蝦皮", "打開 facebook 網頁",
+      "幫我開 chatgpt 的網站", "去 pchome 網站"
+    ],
+    "browser_screenshot": [
+      "截一張現在網頁的圖", "看一下瀏覽器現在的畫面", "網頁現在長怎樣截圖給我", "幫我看網頁渲染出來的樣子"
+    ],
+    "browser_extract": [
+      "把這個網頁上的文字抓下來", "這個頁面上有哪些按鈕跟連結", "提取網頁的內容", "列出這個網頁可以點的東西", "抓目前網頁的結構"
+    ],
+    "browser_click": [
+      "點網頁上的登入按鈕", "在網頁上按下一頁", "點那個網頁連結", "幫我按網頁裡的搜尋鈕", "點網站上的加入購物車"
+    ],
+    "browser_type": [
+      "在網頁搜尋框輸入 iphone", "在網站的輸入欄填上關鍵字", "幫我在網頁表單填名字", "在 youtube 搜尋列打上貓咪影片"
+    ],
+    "browser_close": [
+      "把瀏覽器關掉", "關閉剛剛開的網頁", "瀏覽器用完了關起來", "結束瀏覽器"
+    ],
+    "gmail_list_messages": [
+      "看一下我有沒有新信", "幫我查 gmail 的未讀郵件", "找一下老闆寄給我的信", "我的信箱最近有什麼信", "搜尋 gmail 裡有發票的信",
+      "今天收到哪些 email", "幫我看信"
+    ],
+    "gmail_read_message": [
+      "把那封信的內容讀給我", "打開第一封郵件看全文", "那封信寫了什麼", "讀一下這封 email 的內文", "幫我看那封信是誰寄的講什麼"
+    ],
+    "gmail_send_message": [
+      "寄一封信給小明說明天開會", "幫我回信給客戶", "發 email 給老師請假", "用 gmail 寄報告給主管", "寄信通知大家會議改期",
+      "幫我寫信寄給 hr"
+    ],
+    "gdrive_search_files": [
+      "在雲端硬碟找我的履歷", "google drive 裡有沒有期末報告", "搜尋雲端硬碟的簡報檔", "幫我找 drive 上的那個試算表",
+      "雲端硬碟最近有哪些檔案"
+    ],
+    "gdrive_upload_file": [
+      "把這個檔案上傳到雲端硬碟", "備份這份文件到 google drive", "上傳報告到 drive", "把筆記存到雲端硬碟", "幫我把照片傳到 google 雲端"
+    ],
+    "gcalendar_list_events": [
+      "我今天有什麼行程", "幫我看看我日歷的行程", "這禮拜有哪些會議", "明天有沒有約", "查一下我的日曆", "下週一我有空嗎",
+      "我最近的行程是什麼"
+    ],
+    "gcalendar_create_event": [
+      "幫我在日曆加一個明天下午三點的會議", "新增行程：週五晚上聚餐", "排一個下週二的牙醫預約", "把這個活動加到行事曆",
+      "幫我建立一個每週例會的行程", "提醒我星期三要交報告，加到日曆"
+    ],
+    "gdocs_create_or_append": [
+      "幫我開一份 google 文件寫會議記錄", "建立一個新的 google docs", "把這段內容加到那份文件後面", "讀一下那份 google 文件",
+      "在 google 文件裡寫一篇企劃"
+    ],
+    "gsheets_action": [
+      "讀取 google 試算表的資料", "在試算表新增一列", "幫我把這些數字填進 google sheets", "看那份 sheet 的 A 欄",
+      "建立一個記帳用的 google 試算表", "更新試算表的儲存格"
+    ],
+    "google_open_service": [
+      "打開 gmail", "開啟 google 日曆", "幫我開 google 雲端硬碟", "打開 google 地圖", "開 youtube", "開啟 google 相簿",
+      "打開 google 翻譯"
+    ],
+    "sync_user_habits": [
+      "同步我的使用習慣", "從 chrome 學習我的習慣", "更新我的個人偏好資料", "同步我的瀏覽習慣", "重新了解我平常都在做什麼"
+    ],
+    "memory_save": [
+      "記住我喜歡喝無糖綠茶", "幫我記下來我的生日是五月三號", "以後都用繁體中文回我，記起來", "記住這個專案放在 D 槽",
+      "把這件事存到記憶裡", "請你記得我對花生過敏"
+    ],
+    "memory_forget": [
+      "忘掉我剛剛說的地址", "把那筆記憶刪掉", "不要再記得我的舊電話", "刪除關於我喜歡咖啡的記憶", "把之前記的那件事忘了"
+    ],
+    "memory_list": [
+      "你記得我哪些事", "列出你對我的記憶", "你記了什麼關於我的東西", "看一下長期記憶有什麼", "你還記得我說過什麼嗎"
+    ],
+    "ocr_screen": [
+      "把螢幕上的字讀出來", "辨識這個視窗上的文字", "畫面上那段文字幫我轉成文字檔", "圖片裡寫什麼字幫我 ocr",
+      "把螢幕上的錯誤訊息文字抓出來", "幫我讀這個畫面上的字"
+    ],
+    "search_local_files": [
+      "幫我找電腦裡的期末報告", "我的履歷放在哪", "搜尋電腦裡有 invoice 的檔案", "找一下上禮拜下載的 pdf",
+      "電腦裡有沒有叫 budget 的檔案", "幫我找那份合約", "找出內容有提到專題的文件"
+    ],
+    "read_local_file": [
+      "讀一下 C:\\Users\\User\\Desktop\\notes.txt", "打開這個檔案看內容", "幫我看這個 json 檔寫了什麼", "把那份 word 檔的內容整理給我",
+      "讀取 readme.md", "這個 csv 裡有什麼資料", "看一下這個程式檔在做什麼"
+    ],
+    "computer_key": [
+      "按一下 enter", "幫我按 ctrl+s 存檔", "按 alt+tab 切換視窗", "按 esc 關掉", "幫我按 win+d 回桌面", "全選然後複製",
+      "按 ctrl+z 復原"
+    ],
+    "computer_scroll": [
+      "往下捲一點", "把頁面滑到最下面", "向上滾動", "網頁往下拉", "捲到上面去"
+    ],
+    "computer_drag": [
+      "把這個檔案拖到資料夾裡", "拖曳視窗到螢幕右邊", "把滑桿往右拉", "用拖的把圖示移到桌面左上角", "拉選這一段範圍"
+    ],
+    "computer_wait": [
+      "等它載入完", "等三秒再繼續", "先等一下讓程式開好", "等網頁跑完", "稍等幾秒再看"
+    ]
+  },
+  "multi": [
+    {"text": "打開記事本然後輸入今天的待辦事項", "tools": ["launch_application", "inspect_accessibility_tree", "ui_type"]},
+    {"text": "開 chrome 搜尋台北美食", "tools": ["browser_navigate", "browser_type"]},
+    {"text": "上網查這個錯誤然後幫我修程式", "tools": ["web_search", "read_local_file", "run_background_shell"]},
+    {"text": "看我今天的行程然後寄信提醒同事", "tools": ["gcalendar_list_events", "gmail_send_message"]},
+    {"text": "找出我電腦裡的履歷並上傳到雲端硬碟", "tools": ["search_local_files", "gdrive_upload_file"]},
+    {"text": "看一下螢幕上的錯誤，上網找解法", "tools": ["capture_desktop_screen", "web_search"]},
+    {"text": "讀這個網頁然後存成 google 文件", "tools": ["web_fetch", "gdocs_create_or_append"]},
+    {"text": "跑測試，失敗的話叫 claude 修", "tools": ["run_background_shell", "dispatch_ai_coding_prompt"]},
+    {"text": "幫我操作這個軟體，按下匯出按鈕", "tools": ["list_windows", "inspect_accessibility_tree", "ui_invoke"]},
+    {"text": "到那個網站登入然後截圖給我看", "tools": ["browser_navigate", "browser_click", "browser_screenshot"]},
+    {"text": "幫我看新信，重要的加到日曆", "tools": ["gmail_list_messages", "gmail_read_message", "gcalendar_create_event"]},
+    {"text": "讀這份筆記檔然後記住裡面的重點", "tools": ["read_local_file", "memory_save"]},
+    {"text": "看 git 狀態然後用 discord 告訴我", "tools": ["run_background_shell", "notify_discord"]},
+    {"text": "在畫面上找到播放鍵點下去", "tools": ["capture_desktop_screen", "click_screen"]},
+    {"text": "有沒有裝 line？有的話幫我打開", "tools": ["list_installed_software", "launch_application"]},
+    {"text": "把試算表的數字整理成報告寄給主管", "tools": ["gsheets_action", "gmail_send_message"]}
+  ]
+}

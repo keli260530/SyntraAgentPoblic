@@ -1,0 +1,1985 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Syntra 星樞 · 多代理協作、桌面操控與主動防禦中心</title>
+  <link rel="icon" type="image/png" href="/assets/gemini_icon.png" />
+  <style>
+    :root {
+      --bg-base: #0e1015;
+      --bg-surface: #161922;
+      --bg-elevated: #1e2230;
+      --bg-glass: rgba(30, 34, 48, 0.78);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(129, 140, 248, 0.45);
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --gemini-blue: #60a5fa;
+      --gemini-indigo: #818cf8;
+      --gemini-purple: #c084fc;
+      --accent-green: #22c55e;
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Segoe UI", "Microsoft JhengHei", -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      user-select: none;
+    }
+
+    /* 滾動條美化 */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.2);
+      border-radius: 999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(148, 163, 184, 0.38);
+    }
+
+    /* 左側導覽欄 */
+    .sidebar {
+      width: 270px;
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      padding: 16px 14px;
+      gap: 14px;
+      flex-shrink: 0;
+    }
+
+    .brand-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 6px;
+    }
+
+    .gemini-sparkle {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      background-image: url('/assets/gemini_icon.png');
+      background-size: cover;
+      background-position: center;
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.45);
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 700;
+      background: linear-gradient(90deg, #93c5fd, #c4b5fd, #f9a8d4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: 0.3px;
+    }
+
+    .btn-new-chat {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+    .btn-new-chat:hover {
+      border-color: var(--gemini-indigo);
+      background: rgba(129, 140, 248, 0.14);
+    }
+
+    .sidebar-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      padding: 4px 8px 0;
+    }
+
+    .quick-list {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .quick-item {
+      text-align: left;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-secondary);
+      padding: 9px 11px;
+      border-radius: 10px;
+      font-size: 12.5px;
+      line-height: 1.4;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .quick-item:hover {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      border-color: var(--border-subtle);
+    }
+
+    .sidebar-footer {
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .status-mini-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-secondary);
+      padding: 2px 6px;
+    }
+
+    /* 中央主對話區 */
+    .main-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      position: relative;
+      background: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.08), transparent 55%);
+    }
+
+    .topbar {
+      height: 58px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      gap: 12px;
+      background: rgba(14, 16, 21, 0.82);
+      backdrop-filter: blur(12px);
+    }
+
+    .topbar-left, .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .model-select {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      border: 1px solid var(--border-subtle);
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+      max-width: 320px;
+    }
+    .model-select:focus {
+      border-color: var(--gemini-indigo);
+    }
+
+    .context-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      background: rgba(34, 197, 94, 0.14);
+      color: #4ade80;
+      border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+    .context-badge.dnd {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border-color: rgba(245, 158, 11, 0.35);
+    }
+
+    .btn-pill {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      border: 1px solid var(--border-subtle);
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .btn-pill:hover {
+      border-color: var(--gemini-blue);
+      background: rgba(96, 165, 250, 0.12);
+    }
+    .btn-pill.danger {
+      background: rgba(239, 68, 68, 0.14);
+      color: #f87171;
+      border-color: rgba(239, 68, 68, 0.35);
+    }
+    .btn-pill.danger:hover {
+      background: rgba(239, 68, 68, 0.28);
+    }
+
+    /* 對話內容區 */
+    .chat-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 28px 24px 160px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      max-width: 900px;
+      width: 100%;
+      margin: 0 auto;
+      user-select: text;
+    }
+
+    .hero-welcome {
+      margin: 36px auto 16px;
+      text-align: center;
+      max-width: 680px;
+    }
+    .hero-title {
+      font-size: 32px;
+      font-weight: 800;
+      background: linear-gradient(90deg, #60a5fa, #a78bfa, #f472b6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+    }
+    .hero-sub {
+      color: var(--text-secondary);
+      font-size: 14.5px;
+      line-height: 1.6;
+    }
+
+    .hero-cards {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 24px;
+      text-align: left;
+    }
+    .hero-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .hero-card:hover {
+      border-color: var(--gemini-indigo);
+      transform: translateY(-2px);
+      background: var(--bg-elevated);
+    }
+    .hero-card h4 {
+      font-size: 13.5px;
+      margin-bottom: 5px;
+      color: var(--text-primary);
+    }
+    .hero-card p {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.45;
+    }
+
+    .msg-row {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      animation: fadeIn 0.2s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .msg-row.user {
+      justify-content: flex-end;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 15px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    }
+
+    .msg-bubble {
+      max-width: 82%;
+      padding: 14px 18px;
+      border-radius: 18px;
+      font-size: 14px;
+      line-height: 1.65;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+    .msg-row.user .msg-bubble {
+      background: #283044;
+      color: var(--text-primary);
+      border-bottom-right-radius: 4px;
+    }
+    .msg-row.agent .msg-bubble {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-top-left-radius: 4px;
+      width: 100%;
+    }
+
+    .msg-bubble pre {
+      background: #0b0d12;
+      border: 1px solid var(--border-subtle);
+      padding: 12px;
+      border-radius: 10px;
+      overflow-x: auto;
+      margin: 10px 0;
+      font-family: "Cascadia Code", Consolas, monospace;
+      font-size: 12.5px;
+    }
+
+    .tool-step-pill {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(96, 165, 250, 0.09);
+      border: 1px solid rgba(96, 165, 250, 0.25);
+      color: #93c5fd;
+      padding: 7px 12px;
+      border-radius: 10px;
+      font-size: 12px;
+      margin-bottom: 8px;
+      font-family: Consolas, monospace;
+    }
+
+    .screenshot-preview {
+      margin-top: 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border-subtle);
+      max-width: 100%;
+      max-height: 340px;
+      object-fit: contain;
+      display: block;
+    }
+
+    /* 底部 Gemini 懸浮輸入列 */
+    .prompt-dock {
+      position: absolute;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 48px);
+      max-width: 840px;
+      background: var(--bg-elevated);
+      border: 1px solid rgba(255, 255, 255, 0.13);
+      border-radius: 22px;
+      padding: 10px 14px;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .prompt-dock:focus-within {
+      border-color: var(--gemini-indigo);
+    }
+
+    .attachment-strip {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 8px;
+      background: var(--bg-surface);
+      border-radius: 10px;
+      font-size: 12px;
+      color: var(--gemini-blue);
+    }
+
+    .prompt-input-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+    }
+
+    .prompt-textarea {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-primary);
+      font-size: 14.5px;
+      line-height: 1.5;
+      resize: none;
+      max-height: 130px;
+      outline: none;
+      font-family: inherit;
+      padding: 4px 2px;
+    }
+
+    .btn-send {
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      color: white;
+      border: none;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: opacity 0.15s;
+    }
+    .btn-send:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* 右側多功能抽屜 (監督器 / 上網日誌 / 資安攔截) */
+    .right-drawer {
+      width: 390px;
+      background: var(--bg-surface);
+      border-left: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .drawer-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border-subtle);
+      background: var(--bg-base);
+    }
+    .drawer-tab {
+      flex: 1;
+      padding: 13px 6px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+    .drawer-tab.active {
+      color: var(--gemini-blue);
+      border-bottom-color: var(--gemini-blue);
+      background: var(--bg-surface);
+    }
+
+    .drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+      user-select: text;
+    }
+    .drawer-body.active {
+      display: flex;
+    }
+
+    .panel-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+    .panel-card.tx-alert {
+      border-color: rgba(239, 68, 68, 0.55);
+      background: rgba(239, 68, 68, 0.08);
+    }
+    .panel-card.risk-alert {
+      border-color: rgba(245, 158, 11, 0.55);
+      background: rgba(245, 158, 11, 0.08);
+    }
+
+    .form-label {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 3px;
+      display: block;
+    }
+    .form-input, .form-select {
+      width: 100%;
+      background: var(--bg-base);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-primary);
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      outline: none;
+    }
+    .form-input:focus, .form-select:focus {
+      border-color: var(--gemini-indigo);
+    }
+
+    .btn-block {
+      width: 100%;
+      padding: 9px 12px;
+      border-radius: 8px;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #3b82f6, #6366f1);
+      color: white;
+    }
+    .btn-success {
+      background: #16a34a;
+      color: white;
+    }
+    .btn-danger {
+      background: #dc2626;
+      color: white;
+    }
+
+    .badge-count {
+      background: var(--accent-red);
+      color: white;
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 999px;
+    }
+
+    /* 多組 API 卡片樣式 */
+    .provider-card {
+      background: var(--bg-base);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .provider-card.has-key {
+      border-left: 3px solid var(--accent-green);
+    }
+    .provider-card.no-key {
+      border-left: 3px solid var(--text-muted);
+    }
+    .provider-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* 設定 Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-backdrop.open {
+      display: flex;
+    }
+    .modal-box {
+      width: 760px;
+      max-width: 95vw;
+      max-height: 90vh;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75);
+    }
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 700;
+      font-size: 15px;
+    }
+    .modal-content {
+      padding: 18px 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 左側欄 -->
+  <aside class="sidebar">
+    <div class="brand-header">
+      <div class="gemini-sparkle"></div>
+      <div>
+        <div class="brand-title">Gemini Agent</div>
+        <div style="font-size: 11px; color: var(--text-muted);">多組 API 支援 · 桌面與監督核心</div>
+      </div>
+    </div>
+
+    <button class="btn-new-chat" onclick="resetChat()">
+      <span>＋</span> 開啟新對話
+    </button>
+
+    <div class="sidebar-section-title">快速執行場景</div>
+    <div class="quick-list">
+      <button class="quick-item" onclick="quickPrompt('請擷取目前整張主螢幕畫面，分析畫面上有哪些開啟中的視窗與程式，並告訴我目前電腦的運作狀態。')">
+        🖥️ 擷取主螢幕全畫面並分析
+      </button>
+      <button class="quick-item" onclick="quickPrompt('請在背景檢查我正在寫程式的視窗（如 Antigravity / Cursor / VS Code），檢查目前 AI 回覆了什麼、是否有錯誤，不要搶我的滑鼠焦點。')">
+        🔭 背景檢查寫程式 AI 視窗狀態
+      </button>
+      <button class="quick-item" onclick="switchTab('supervisor')">
+        🔄 啟動「自動監督 AI 寫程式閉環」（含 3 次卡關熔斷）
+      </button>
+      <button class="quick-item" onclick="quickPrompt('請在背景執行目前工作目錄的 Git 狀態與語法檢查，若有錯誤請直接整理出修復指令。')">
+        🧪 背景執行 Git 與程式碼檢查
+      </button>
+      <button class="quick-item" onclick="quickPrompt('請幫我上網搜尋 Python FastAPI WebSocket 斷線重連的最佳實踐，並把造訪的網址與重點摘要回報給我。')">
+        🌐 連網查詢技術資料並透明回報
+      </button>
+      <button class="quick-item" onclick="quickPrompt('請幫我產生今日與近 7 天的即時用機與專注健康報告（包含目前開啟的開發工具與瀏覽器時長統計）。')">
+        📊 產生即時用機與開發報告
+      </button>
+      <button class="quick-item" onclick="quickPrompt('請幫我自動分類整理桌面檔案；如果我不滿意，請提醒我可以隨時執行一鍵還原整理。')">
+        🧹 自動整理桌面 (支援 ↩️ 一鍵還原)
+      </button>
+      <button class="quick-item" onclick="openGuideModal()">
+        📖 開啟可搜尋完整使用說明指南 (F1)
+      </button>
+      <button class="quick-item" onclick="captureSelectedWindowToChat()">
+        📸 擷取目前所選螢幕/視窗附加到對話
+      </button>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="status-mini-row">
+        <span>可用 API 模型</span>
+        <strong id="statModelCount" style="color: var(--gemini-blue);">載入中...</strong>
+      </div>
+      <div class="status-mini-row">
+        <span>AI 監督器狀態</span>
+        <strong id="statSupState" style="color: var(--text-secondary);">未啟動</strong>
+      </div>
+      <div class="status-mini-row">
+        <span>交易防護閘門</span>
+        <strong style="color: var(--accent-green);">🔒 嚴格保護中</strong>
+      </div>
+      <button class="btn-pill" style="width: 100%; justify-content: center; margin-top: 4px;" onclick="openSettingsModal()">
+        🔑 多組 API Key 與系統設定
+      </button>
+    </div>
+  </aside>
+
+  <!-- 中央 Gemini 對話主區 -->
+  <main class="main-area">
+    <header class="topbar">
+      <div class="topbar-left">
+        <select id="modelSelect" class="model-select" onchange="onModelChange()">
+          <option value="">讀取模型清單中...</option>
+        </select>
+        <button class="btn-pill" onclick="openSettingsModal()" title="新增或管理你的 API Key">
+          🔑 管理 API
+        </button>
+        <button id="btnGoogleLogin" class="btn-pill" style="background:#2563eb;color:white;border:none;font-weight:600;" onclick="handleGoogleLoginClick()" title="登入 Google 帳號或同步工作習慣">
+          🌐 登入 Google
+        </button>
+      </div>
+
+      <div class="topbar-right">
+        <button class="btn-pill" onclick="openGuideModal()" title="開啟具備關鍵字即時搜尋的 Syntra 完整使用指南">
+          📖 使用說明指南
+        </button>
+        <div id="contextBadge" class="context-badge">
+          🟢 待命 / 正常協作
+        </div>
+        <button id="btnManualDnd" class="btn-pill" onclick="toggleManualDnd()" title="切換手動免打擾（打遊戲/看片絕不彈窗或搶滑鼠）">
+          🔕 免打擾: 關
+        </button>
+        <button id="btnKillSwitch" class="btn-pill danger" onclick="triggerKillSwitch()" title="全域快捷鍵 Ctrl+Alt+Q 立即停止一切操作">
+          🛑 緊急停止 (Ctrl+Alt+Q)
+        </button>
+        <button id="btnGoogleLoginRight" class="btn-pill" style="background:#2563eb;color:white;border:none;font-weight:700;" onclick="handleGoogleLoginClick()" title="Google 帳號登入與雲端個資漫遊">
+          🌐 Google 登入 (Sign in)
+        </button>
+      </div>
+    </header>
+
+    <div id="chatScroll" class="chat-scroll">
+      <div id="heroWelcome" class="hero-welcome">
+        <div class="hero-title">你好，今天要監督哪個專案或操作什麼軟體？</div>
+        <div class="hero-sub">
+          支援自由接入<strong>多組 API Key</strong>（Gemini / OpenAI / Claude / DeepSeek 等）。具備目前主螢幕畫面檢視、AI 寫程式自動閉環監督（3 次卡關熔斷）、上網透明通報、遊戲/觀影免打擾與交易 PIN 防護。
+        </div>
+        <div class="hero-cards">
+          <div class="hero-card" onclick="captureSelectedWindowToChat()">
+            <h4>🖥️ 目前螢幕畫面即時檢視</h4>
+            <p>在右側選取「目前桌面全螢幕」或特定視窗，隨時背景擷取畫面讓 AI 幫你檢查。</p>
+          </div>
+          <div class="hero-card" onclick="switchTab('supervisor')">
+            <h4>🔭 啟動 AI 寫程式自動監督閉環</h4>
+            <p>選取全螢幕或 IDE 視窗，寫完自動跑測試、有錯自動貼回修正，卡關 3 次用 Discord 叫你。</p>
+          </div>
+          <div class="hero-card" onclick="openSettingsModal()">
+            <h4>🔑 設定多組 API Key</h4>
+            <p>可自由手動輸入 Gemini、OpenAI、Anthropic、DeepSeek 多把金鑰並隨時一鍵切換。</p>
+          </div>
+          <div class="hero-card" onclick="switchTab('web')">
+            <h4>🌐 透明連網研究與即時回報</h4>
+            <p>所有上網查詢皆即時記錄網址、目的與重點摘要；未知登入或上傳網域自動攔截。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 底部輸入框 -->
+    <div class="prompt-dock">
+      <div id="attachmentStrip" class="attachment-strip">
+        <span id="attachmentLabel">📸 已附加目前螢幕畫面</span>
+        <button class="btn-pill" style="padding: 2px 8px; font-size: 11px;" onclick="clearAttachment()">移除</button>
+      </div>
+      <div class="prompt-input-row" style="position:relative;">
+        <button class="btn-pill" onclick="toggleWebPlusMenu()" title="附加畫面、開啟快捷指令庫或跨專案工具">
+          ＋ 功能與指令 ▾
+        </button>
+        <div id="webPlusMenu" style="display:none;position:absolute;bottom:54px;left:12px;background:#161b26;border:1px solid #334155;border-radius:10px;padding:6px;z-index:200;min-width:260px;box-shadow:0 12px 28px rgba(0,0,0,0.6);">
+          <div style="font-size:11px;color:#38bdf8;font-weight:700;padding:4px 10px;">📎 附加內容與 ⚡ 快捷指令庫</div>
+          <button class="quick-item" style="width:100%;" onclick="captureSelectedWindowToChat();toggleWebPlusMenu();">📸 擷取目前螢幕畫面附加到訊息</button>
+          <button class="quick-item" style="width:100%;" onclick="quickPrompt('/status 請檢查目前系統與所有代理狀態');toggleWebPlusMenu();">⚡ /status — 檢查系統與多代理狀態</button>
+          <button class="quick-item" style="width:100%;" onclick="quickPrompt('請幫我整理桌面檔案（若不喜歡可隨時還原）');toggleWebPlusMenu();">🧹 /organize — 整理桌面檔案 (支援一鍵還原)</button>
+          <button class="quick-item" style="width:100%;" onclick="quickPrompt('請幫我還原剛才的桌面整理');toggleWebPlusMenu();">↩️ /undo — 一鍵還原上次桌面整理</button>
+          <button class="quick-item" style="width:100%;" onclick="quickPrompt('請幫我產生即時用機與開發時長報告');toggleWebPlusMenu();">📊 /report — 產生即時用機與開發報告</button>
+          <button class="quick-item" style="width:100%;" onclick="openGuideModal();toggleWebPlusMenu();">📖 /help — 搜尋本地功能使用指南</button>
+        </div>
+        <textarea
+          id="promptInput"
+          class="prompt-textarea"
+          rows="1"
+          placeholder="直接詢問本地功能怎麼用、下達跨專案修改指令，或點擊左側『＋』開啟快捷指令庫... (Enter 送出)"
+          onkeydown="handlePromptKey(event)"
+        ></textarea>
+        <button id="btnSend" class="btn-send" onclick="sendMessage()" title="Send (送出指令)">↑</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- 右側監督、上網與資安抽屜 -->
+  <aside class="right-drawer">
+    <div class="drawer-tabs">
+      <button id="tabBtn-supervisor" class="drawer-tab active" onclick="switchTab('supervisor')">
+        🔭 螢幕/視窗監督
+      </button>
+      <button id="tabBtn-web" class="drawer-tab" onclick="switchTab('web')">
+        🌐 上網通報 <span id="webCountBadge" class="badge-count" style="background:#0284c7;display:none;">0</span>
+      </button>
+      <button id="tabBtn-security" class="drawer-tab" onclick="switchTab('security')">
+        🛡️ 資安審批 <span id="secCountBadge" class="badge-count" style="display:none;">0</span>
+      </button>
+    </div>
+
+    <!-- Tab 1: AI 寫程式監督器 -->
+    <div id="tabBody-supervisor" class="drawer-body active">
+      <div class="panel-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <strong style="font-size:13.5px;">🎯 選擇要監督或檢查的畫面 / 視窗</strong>
+          <button class="btn-pill" style="padding:3px 9px;font-size:11px;" onclick="refreshWindows()">🔄 重新整理</button>
+        </div>
+        <select id="windowSelect" class="form-select">
+          <option value="0">🖥️ 目前桌面全螢幕 (Main Display 完整畫面)</option>
+        </select>
+        <button class="btn-pill" style="justify-content:center;" onclick="previewSelectedWindow()">
+          👁️ 擷取預覽目前畫面（不搶焦點）
+        </button>
+        <img id="windowPreviewImg" class="screenshot-preview" style="display:none;" />
+      </div>
+
+      <div class="panel-card">
+        <strong style="font-size:13.5px;">🤖 自動閉環監督設定 (含 3 次卡關熔斷)</strong>
+        <div>
+          <label class="form-label">監督目標與驗收條件</label>
+          <input id="supGoal" class="form-input" placeholder="例如：監督目前畫面上的 AI 寫程式完成度，有錯自動修正" value="監督目前畫面上的 AI 寫程式進度，檢查有無報錯或卡住，有錯自動整理指令回報修好" />
+        </div>
+        <div>
+          <label class="form-label">專案資料夾路徑 (選填，供背景跑測試)</label>
+          <input id="supWorkspace" class="form-input" placeholder="例如：C:\Projects\my_project" />
+        </div>
+        <div>
+          <label class="form-label">背景自動驗證指令 (選填，無黑窗執行)</label>
+          <input id="supVerifyCmd" class="form-input" placeholder="例如：pytest -q 或 npm test" />
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <div style="flex:1;">
+            <label class="form-label">連續卡關幾次觸發熔斷</label>
+            <input id="supMaxFail" type="number" class="form-input" value="3" min="1" max="10" />
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:4px;">
+          <button id="btnStartSup" class="btn-block btn-primary" onclick="startSupervisor()">▶️ 啟動自動監督</button>
+          <button id="btnStopSup" class="btn-block btn-danger" onclick="stopSupervisor()" style="display:none;">⏹️ 停止監督</button>
+        </div>
+        <button id="btnResumeSup" class="btn-block btn-success" onclick="resumeSupervisor()" style="display:none;">
+          🔄 重置熔斷計數並繼續重試 3 次
+        </button>
+      </div>
+
+      <div class="sidebar-section-title">監督事件即時日誌</div>
+      <div id="supervisorLogList" style="display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:12px;color:var(--text-muted);padding:8px;">可點擊上方「👁️ 擷取預覽目前畫面」檢查螢幕截圖。</div>
+      </div>
+    </div>
+
+    <!-- Tab 2: 上網內容透明通報 -->
+    <div id="tabBody-web" class="drawer-body">
+      <div style="font-size:12px;color:var(--text-secondary);line-height:1.5;">
+        🌐 <strong>上網透明規則</strong>：Agent 每次搜尋或連線外部網址，皆會在此即時回報「網址 + 目的 + 內容摘要」並同步推播 Discord。未知登入或上傳網域將自動攔截等待批准。
+      </div>
+      <div id="webAuditList" style="display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:12px;color:var(--text-muted);">本次工作階段尚無連網紀錄。</div>
+      </div>
+    </div>
+
+    <!-- Tab 3: 資安與交易攔截佇列 -->
+    <div id="tabBody-security" class="drawer-body">
+      <div style="font-size:12px;color:var(--text-secondary);line-height:1.5;">
+        🛡️ <strong>分級資安閘門</strong>：<br/>
+        • <strong>禁止主動下單</strong>：任何結帳/購買/付款動作強制攔截，須核對截圖並輸入你的<strong>安全 PIN 碼</strong>才放行。<br/>
+        • <strong>一般高風險操作</strong>：刪檔、未知登入網域或系統修改，點擊「批准」即可放行。
+      </div>
+      <div id="securityPendingList" style="display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:12px;color:var(--text-muted);">目前沒有待審批的攔截項目。</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 設定面板 Modal -->
+  <div id="settingsModal" class="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span>🔑 多組 API Key 接入、Discord 與資安設定</span>
+        <button class="btn-pill" onclick="closeSettingsModal()">✕ 關閉</button>
+      </div>
+      <div class="modal-content">
+        <!-- 0. 軟體顯示語言設定 (繁體中文、簡體中文、英文、日語、韓文) -->
+        <div class="panel-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <strong>🌐 軟體介面語言 (Interface Language)</strong>
+          </div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">
+            支援繁體中文、簡體中文、英文、日語、韓文，設定後儲存即刻生效。
+          </div>
+          <div style="margin-top:8px;max-width:320px;">
+            <select id="cfgLanguage" class="form-input" style="font-weight:600;padding:6px 10px;">
+              <option value="zh_TW">繁體中文 (Traditional Chinese)</option>
+              <option value="zh_CN">简体中文 (Simplified Chinese)</option>
+              <option value="en">English</option>
+              <option value="ja">日本語 (Japanese)</option>
+              <option value="ko">한국어 (Korean)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 0.5 介面字體大小調節 (統一收納於設定中) -->
+        <div class="panel-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <strong>🔤 全介面文字大小調節 (UI Font Size)</strong>
+            <span id="lblWebFontSize" style="font-size:12px;color:#38bdf8;font-weight:700;">12 pt (100%)</span>
+          </div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">
+            已將原本下方的縮放滑桿統一整合至設定面板，消除底部誤觸卡頓，調整後即刻套用並同步儲存至設定檔。
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
+            <select id="cfgUiFontSize" class="form-input" style="max-width:140px;font-weight:600;" onchange="applyWebFontSize(this.value)">
+              <option value="10">10 pt (83%)</option>
+              <option value="11">11 pt (92%)</option>
+              <option value="12" selected>12 pt (預設 100%)</option>
+              <option value="14">14 pt (117%)</option>
+              <option value="16">16 pt (133%)</option>
+              <option value="18">18 pt (150%)</option>
+              <option value="20">20 pt (167%)</option>
+              <option value="22">22 pt (183%)</option>
+            </select>
+            <button type="button" class="btn-pill" onclick="stepWebFontSize(-1)">A-</button>
+            <button type="button" class="btn-pill" onclick="stepWebFontSize(1)">A+</button>
+            <button type="button" class="btn-pill" onclick="applyWebFontSize(12)">重置 12pt</button>
+          </div>
+        </div>
+
+        <!-- 1. 多組 API Key 管理專案 -->
+        <div class="panel-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <strong>🔑 多組 API Key / Provider 接入管理</strong>
+            <button class="btn-pill" style="background:var(--gemini-indigo);color:white;border:none;" onclick="openAddProviderForm()">
+              ＋ 新增 API Key
+            </button>
+          </div>
+          <div style="font-size:12px;color:var(--text-secondary);">
+            支援接入多組 API（Gemini / OpenAI / Claude / DeepSeek / 自建端點）。填入 API Key 後可點擊「⚡ 測試連線」即時驗證。
+          </div>
+
+          <!-- 已配置的 Provider 清單 -->
+          <div id="providersContainer" style="display:flex;flex-direction:column;gap:10px;margin-top:6px;">
+            <div style="font-size:12px;color:var(--text-muted);">載入 API 清單中...</div>
+          </div>
+        </div>
+
+        <!-- 2. 雙向 Discord Bot 設定 -->
+        <div class="panel-card">
+          <strong>💬 雙向 Discord Bot 通知與遠端控制</strong>
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+            <input type="checkbox" id="cfgDiscordEnabled" />
+            啟用 Discord 即時推播與遠端雙向互動（打遊戲時有事用 Discord 通知你，手機也能按批准與下指令）
+          </label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div>
+              <label class="form-label">Discord Bot Token</label>
+              <input id="cfgDiscordToken" type="password" class="form-input" placeholder="貼上 Bot Token..." />
+            </div>
+            <div>
+              <label class="form-label">指定通知與互動 Channel ID</label>
+              <input id="cfgDiscordChannel" class="form-input" placeholder="例如：123456789012345678" />
+            </div>
+            <div style="grid-column:span 2;">
+              <label class="form-label">Discord Webhook URL (選填備援)</label>
+              <input id="cfgDiscordWebhook" class="form-input" placeholder="https://discord.com/api/webhooks/..." />
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. 資安與交易 PIN 碼設定 -->
+        <div class="panel-card">
+          <strong>🔐 交易放行安全 PIN 碼與防護</strong>
+          <div style="font-size:12px;color:var(--text-secondary);">
+            系統禁止主動下單任何交易。當你需要允許特定交易時，必須輸入此安全 PIN 碼（初始預設為 <code>0000</code>）。
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div>
+              <label class="form-label">設定新的交易安全 PIN 碼 (留空代表不修改)</label>
+              <input id="cfgNewPin" type="password" class="form-input" placeholder="輸入新 PIN 碼 (如 4~8 位數字)" />
+            </div>
+            <div style="display:flex;flex-direction:column;justify-content:center;gap:6px;padding-top:14px;">
+              <label style="display:flex;align-items:center;gap:6px;font-size:12.5px;">
+                <input type="checkbox" id="cfgRedactWindows" checked />
+                截圖自動塗黑遮罩敏感視窗 (密碼庫/網銀)
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. 免打擾與開機自啟 -->
+        <div class="panel-card">
+          <strong>🎮 遊戲 / 看影片 / 寫功課免打擾與開機自啟</strong>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12.5px;">
+            <label style="display:flex;align-items:center;gap:6px;">
+              <input type="checkbox" id="cfgAutoGame" checked /> 自動偵測打遊戲 (鎖定背景低耗能 + 禁搶畫面)
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;">
+              <input type="checkbox" id="cfgAutoVideo" checked /> 自動偵測看影片 (禁搶焦點)
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;">
+              <input type="checkbox" id="cfgProtectHomework" checked /> 寫功課/操作滑鼠時防搶游標
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;">
+              <input type="checkbox" id="cfgAutostart" checked /> Windows 開機自動靜默常駐系統列
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-pill" onclick="closeSettingsModal()">關閉</button>
+        <button class="btn-pill" style="background:var(--gemini-indigo);color:white;border:none;padding:8px 18px;" onclick="saveGeneralSettings()">
+          💾 儲存系統設定
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentSessionId = "session_" + Date.now();
+    let attachedImageB64 = null;
+    let manualDnd = false;
+    let emergencyStop = false;
+    let pendingTickets = {};
+    let ws = null;
+    let cachedProviders = [];
+
+    async function initApp() {
+      await fetchStatus();
+      await refreshWindows();
+      connectWebSocket();
+    }
+
+    function connectWebSocket() {
+      const proto = location.protocol === "https:" ? "wss:" : "ws:";
+      ws = new WebSocket(`${proto}//${location.host}/ws`);
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          handleWsEvent(data);
+        } catch (e) {}
+      };
+      ws.onclose = () => {
+        setTimeout(connectWebSocket, 3000);
+      };
+    }
+
+    function handleWsEvent(data) {
+      if (data.type === "CONTEXT_STATE") {
+        updateContextBadge(data.state);
+        updateKillSwitchUI(data.emergency_stop);
+      } else if (data.type === "TOOL_STEP") {
+        renderLiveToolStep(data.step);
+      } else if (data.type === "WEB_ACTIVITY") {
+        prependWebRecord(data.record);
+      } else if (data.type === "SECURITY_TICKET") {
+        pendingTickets[data.ticket.id] = data.ticket;
+        renderSecurityTickets();
+        switchTab("security");
+        appendSystemAlertToChat(data.ticket);
+      } else if (data.type === "SECURITY_RESOLVED") {
+        if (pendingTickets[data.ticket_id]) {
+          pendingTickets[data.ticket_id].status = "RESOLVED";
+          delete pendingTickets[data.ticket_id];
+        }
+        renderSecurityTickets();
+      } else if (data.type === "SUPERVISOR_EVENT") {
+        prependSupervisorLog(data.entry);
+        fetchStatus();
+      } else if (data.type === "DISCORD_USER_MSG") {
+        appendMessage("user", `📱 [Discord 遠端指令 - ${data.user}]: ${data.content}`);
+      } else if (data.type === "DISCORD_AGENT_REPLY") {
+        appendMessage("agent", `📱 [已同步回覆至 Discord (${data.model_used})]:\n${data.reply}`);
+      } else if (data.type === "API_PROVIDER_MUTATION") {
+        fetchStatus();
+        const actionMap = { ADDED: "新增", MODIFIED: "修改", DELETED: "刪除" };
+        const act = actionMap[data.event_type] || "異動";
+        appendMessage("agent", `🔔 **【API 設定${act}安全通知】**\n• 動作：${act} API Provider\n• 來源：${data.source}\n• 服務商：\`${data.info?.name}\` (端點: \`${data.info?.base_url}\`)\n• 異動細項：${(data.info?.changes || []).join("、")}\n• 時間：${data.info?.timestamp}`);
+      }
+    }
+
+    async function fetchStatus() {
+      try {
+        const res = await fetch("/api/status");
+        const data = await res.json();
+        cachedProviders = data.providers || [];
+        populateModels(data.models_catalog, data.settings?.selected_model);
+        updateContextBadge(data.context);
+        updateKillSwitchUI(data.emergency_stop);
+        updateSupervisorUI(data.supervisor);
+
+        pendingTickets = {};
+        for (const t of (data.pending_approvals || [])) {
+          if (t.status === "PENDING") pendingTickets[t.id] = t;
+        }
+        renderSecurityTickets();
+
+        const webList = data.web_history || [];
+        const webContainer = document.getElementById("webAuditList");
+        if (webList.length > 0) {
+          webContainer.innerHTML = "";
+          webList.forEach((r) => prependWebRecord(r, false));
+        }
+      } catch (e) {}
+    }
+
+    function populateModels(catalog, selectedModel) {
+      const sel = document.getElementById("modelSelect");
+      const models = catalog || [];
+      document.getElementById("statModelCount").textContent = `${models.length} 個可用`;
+
+      sel.innerHTML = "";
+      if (models.length === 0) {
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "⚠️ 尚未設定 API Key (點右上管理 API)";
+        sel.appendChild(opt);
+        return;
+      }
+
+      models.forEach((m) => {
+        const opt = document.createElement("option");
+        opt.value = m.full_id;
+        opt.textContent = `${m.has_key ? "🟢" : "⚪"} ${m.display_name}`;
+        if (selectedModel && m.full_id === selectedModel) opt.selected = true;
+        sel.appendChild(opt);
+      });
+    }
+
+    async function onModelChange() {
+      const val = document.getElementById("modelSelect").value;
+      await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ selected_model: val }),
+      });
+    }
+
+    function updateContextBadge(state) {
+      if (!state) return;
+      const badge = document.getElementById("contextBadge");
+      badge.textContent = state.label || "🟢 待命";
+      if (state.mode !== "NORMAL") {
+        badge.classList.add("dnd");
+      } else {
+        badge.classList.remove("dnd");
+      }
+    }
+
+    function updateKillSwitchUI(isStopped) {
+      emergencyStop = !!isStopped;
+      const btn = document.getElementById("btnKillSwitch");
+      if (emergencyStop) {
+        btn.textContent = "🔓 已緊急鎖定 (點此解除)";
+        btn.style.background = "#dc2626";
+        btn.style.color = "#fff";
+      } else {
+        btn.textContent = "🛑 緊急停止 (Ctrl+Alt+Q)";
+        btn.style.background = "";
+        btn.style.color = "";
+      }
+    }
+
+    async function triggerKillSwitch() {
+      const res = await fetch("/api/security/killswitch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reset: emergencyStop }),
+      });
+      const data = await res.json();
+      updateKillSwitchUI(data.emergency_stop);
+    }
+
+    async function toggleManualDnd() {
+      manualDnd = !manualDnd;
+      const btn = document.getElementById("btnManualDnd");
+      btn.textContent = manualDnd ? "🔕 免打擾: 開" : "🔕 免打擾: 關";
+      await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dnd: { manual_dnd: manualDnd } }),
+      });
+      fetchStatus();
+    }
+
+    function resetChat() {
+      currentSessionId = "session_" + Date.now();
+      const scroll = document.getElementById("chatScroll");
+      scroll.innerHTML = "";
+      clearAttachment();
+    }
+
+    function quickPrompt(text) {
+      const input = document.getElementById("promptInput");
+      input.value = text;
+      sendMessage();
+    }
+
+    function handlePromptKey(e) {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    }
+
+    function appendMessage(role, text, extra = {}) {
+      const welcome = document.getElementById("heroWelcome");
+      if (welcome) welcome.style.display = "none";
+
+      const scroll = document.getElementById("chatScroll");
+      const row = document.createElement("div");
+      row.className = `msg-row ${role}`;
+
+      if (role === "agent") {
+        const av = document.createElement("div");
+        av.className = "avatar";
+        av.textContent = "✦";
+        row.appendChild(av);
+      }
+
+      const bubble = document.createElement("div");
+      bubble.className = "msg-bubble";
+      if (extra.id) bubble.id = extra.id;
+
+      const formatted = formatMarkdownText(text);
+      bubble.innerHTML = formatted;
+
+      if (extra.image_b64) {
+        const img = document.createElement("img");
+        img.className = "screenshot-preview";
+        img.src = "data:image/jpeg;base64," + extra.image_b64;
+        bubble.appendChild(img);
+      }
+
+      row.appendChild(bubble);
+      scroll.appendChild(row);
+      scroll.scrollTop = scroll.scrollHeight;
+      return bubble;
+    }
+
+    function formatMarkdownText(raw) {
+      if (!raw) return "";
+      let safe = raw
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+      safe = safe.replace(/```(\w*)\n([\s\S]*?)```/g, "<pre><code>$2</code></pre>");
+      safe = safe.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+      return safe;
+    }
+
+    function renderLiveToolStep(step) {
+      const container = document.getElementById("activeAgentBubble");
+      if (!container) return;
+      let stepEl = document.getElementById(`step_${step.step}`);
+      if (!stepEl) {
+        stepEl = document.createElement("div");
+        stepEl.id = `step_${step.step}`;
+        stepEl.className = "tool-step-pill";
+        container.appendChild(stepEl);
+      }
+      const icon = step.status === "RUNNING" ? "⏳" : "✅";
+      stepEl.textContent = `${icon} 步驟 ${step.step}: 執行工具 [${step.tool}] ${JSON.stringify(step.args).slice(0, 75)}`;
+      const scroll = document.getElementById("chatScroll");
+      scroll.scrollTop = scroll.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById("promptInput");
+      const text = input.value.trim();
+      if (!text) return;
+
+      const modelId = document.getElementById("modelSelect").value;
+      const imgToSend = attachedImageB64;
+
+      input.value = "";
+      clearAttachment();
+      appendMessage("user", text, { image_b64: imgToSend });
+
+      const loadingBubble = appendMessage("agent", "✦ 思考與操作中...", { id: "activeAgentBubble" });
+      document.getElementById("btnSend").disabled = true;
+
+      try {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            session_id: currentSessionId,
+            message: text,
+            model_id: modelId || null,
+            image_b64: imgToSend,
+          }),
+        });
+        const data = await res.json();
+        loadingBubble.removeAttribute("id");
+        loadingBubble.innerHTML = formatMarkdownText(data.reply || data.error || "已完成。");
+        if (data.screenshot_b64) {
+          const img = document.createElement("img");
+          img.className = "screenshot-preview";
+          img.src = "data:image/jpeg;base64," + data.screenshot_b64;
+          loadingBubble.appendChild(img);
+        }
+      } catch (e) {
+        loadingBubble.removeAttribute("id");
+        loadingBubble.textContent = "⚠️ 請求發生錯誤：" + e;
+      } finally {
+        document.getElementById("btnSend").disabled = false;
+        const scroll = document.getElementById("chatScroll");
+        scroll.scrollTop = scroll.scrollHeight;
+      }
+    }
+
+    /* 視窗列表與主螢幕選擇 */
+    async function refreshWindows() {
+      try {
+        const res = await fetch("/api/windows");
+        const data = await res.json();
+        const sel = document.getElementById("windowSelect");
+        const prev = sel.value;
+        sel.innerHTML = "";
+
+        const wins = data.windows || [];
+        // 確保永遠有桌面主螢幕選項
+        if (!wins.some(w => String(w.hwnd) === "0")) {
+          wins.unshift({
+            hwnd: 0,
+            title: "🖥️ 目前桌面全螢幕 (Main Display 完整畫面)",
+            process_name: "DesktopScreen",
+          });
+        }
+
+        wins.forEach((w) => {
+          const opt = document.createElement("option");
+          opt.value = w.hwnd;
+          opt.dataset.title = w.title;
+          if (w.hwnd === 0) {
+            opt.textContent = "🖥️ 目前桌面全螢幕 (Main Display 完整畫面)";
+          } else {
+            opt.textContent = `[${w.process_name}] ${w.title.slice(0, 48)} (HWND:${w.hwnd})`;
+          }
+          if (String(w.hwnd) === String(prev)) opt.selected = true;
+          sel.appendChild(opt);
+        });
+      } catch (e) {}
+    }
+
+    async function previewSelectedWindow() {
+      const sel = document.getElementById("windowSelect");
+      const hwnd = sel.value || "0";
+      const res = await fetch("/api/window/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hwnd: Number(hwnd), grid: false }),
+      });
+      const data = await res.json();
+      if (data.ok && data.image_b64) {
+        const img = document.getElementById("windowPreviewImg");
+        img.src = "data:image/jpeg;base64," + data.image_b64;
+        img.style.display = "block";
+      }
+    }
+
+    async function captureSelectedWindowToChat() {
+      const sel = document.getElementById("windowSelect");
+      const hwnd = sel.value || "0";
+      const res = await fetch("/api/window/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hwnd: Number(hwnd), grid: true }),
+      });
+      const data = await res.json();
+      if (data.ok && data.image_b64) {
+        attachedImageB64 = data.image_b64;
+        const strip = document.getElementById("attachmentStrip");
+        const title = hwnd === "0" ? "目前桌面主螢幕全畫面" : (data.meta?.title?.slice(0, 32) || hwnd);
+        document.getElementById("attachmentLabel").textContent = `📸 已附加螢幕/視窗畫面：${title}`;
+        strip.style.display = "flex";
+      }
+    }
+
+    function clearAttachment() {
+      attachedImageB64 = null;
+      document.getElementById("attachmentStrip").style.display = "none";
+    }
+
+    /* AI 監督閉環控制 */
+    async function startSupervisor() {
+      const sel = document.getElementById("windowSelect");
+      const hwnd = Number(sel.value || 0);
+      const title = sel.options[sel.selectedIndex]?.dataset?.title || (hwnd === 0 ? "目前主螢幕全畫面" : "TargetWindow");
+      const goal = document.getElementById("supGoal").value.trim();
+      const workspace = document.getElementById("supWorkspace").value.trim();
+      const verifyCmd = document.getElementById("supVerifyCmd").value.trim();
+      const maxFail = Number(document.getElementById("supMaxFail").value || 3);
+
+      const res = await fetch("/api/supervisor/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          hwnd: hwnd,
+          window_title: title,
+          goal: goal,
+          workspace_dir: workspace,
+          verify_command: verifyCmd,
+          max_failures: maxFail,
+        }),
+      });
+      const data = await res.json();
+      updateSupervisorUI(data.supervisor);
+    }
+
+    async function stopSupervisor() {
+      const res = await fetch("/api/supervisor/stop", { method: "POST" });
+      const data = await res.json();
+      updateSupervisorUI(data.supervisor);
+    }
+
+    async function resumeSupervisor() {
+      const res = await fetch("/api/supervisor/resume", { method: "POST" });
+      const data = await res.json();
+      updateSupervisorUI(data.supervisor);
+    }
+
+    function updateSupervisorUI(sup) {
+      if (!sup) return;
+      const isRunning = sup.active;
+      const sess = sup.session;
+      const statEl = document.getElementById("statSupState");
+      const btnStart = document.getElementById("btnStartSup");
+      const btnStop = document.getElementById("btnStopSup");
+      const btnResume = document.getElementById("btnResumeSup");
+
+      if (isRunning) {
+        statEl.textContent = `🟢 監督中 (${sess.consecutive_failures}/${sess.max_failures})`;
+        statEl.style.color = "var(--accent-green)";
+        btnStart.style.display = "none";
+        btnStop.style.display = "block";
+        btnResume.style.display = "none";
+      } else if (sess && sess.status === "CIRCUIT_BROKEN") {
+        statEl.textContent = "⚠️ 觸發 3 次卡關熔斷";
+        statEl.style.color = "var(--accent-red)";
+        btnStart.style.display = "none";
+        btnStop.style.display = "block";
+        btnResume.style.display = "block";
+      } else {
+        statEl.textContent = sess?.status || "未啟動";
+        statEl.style.color = "var(--text-secondary)";
+        btnStart.style.display = "block";
+        btnStop.style.display = "none";
+        btnResume.style.display = "none";
+      }
+    }
+
+    function prependSupervisorLog(entry) {
+      const list = document.getElementById("supervisorLogList");
+      const card = document.createElement("div");
+      card.className = "panel-card";
+      card.style.fontSize = "12px";
+      card.innerHTML = `
+        <div style="display:flex;justify-content:space-between;color:var(--text-muted);font-size:11px;">
+          <span>${entry.event}</span>
+          <span>${entry.timestamp?.split("T")[1] || ""}</span>
+        </div>
+        <div style="line-height:1.45;">${formatMarkdownText(entry.message || "")}</div>
+      `;
+      list.prepend(card);
+    }
+
+    /* 上網透明通報渲染 */
+    function prependWebRecord(rec, updateBadge = true) {
+      const list = document.getElementById("webAuditList");
+      if (list.children.length === 1 && list.children[0].textContent.includes("尚無連網紀錄")) {
+        list.innerHTML = "";
+      }
+      const card = document.createElement("div");
+      card.className = "panel-card";
+      card.style.fontSize = "12px";
+      card.innerHTML = `
+        <div style="font-weight:700;color:var(--gemini-blue);">${rec.title || "🌐 連網紀錄"}</div>
+        <div style="color:var(--text-secondary);font-size:11.5px;">🎯 目的：${rec.purpose || ""}</div>
+        <a href="${rec.url}" target="_blank" style="color:#38bdf8;font-size:11px;word-break:break-all;">${rec.url}</a>
+        <div style="color:var(--text-primary);background:var(--bg-base);padding:8px;border-radius:6px;line-height:1.45;">
+          ${formatMarkdownText(rec.summary || "")}
+        </div>
+      `;
+      list.prepend(card);
+
+      if (updateBadge) {
+        const badge = document.getElementById("webCountBadge");
+        badge.textContent = String(Number(badge.textContent || 0) + 1);
+        badge.style.display = "inline-block";
+      }
+    }
+
+    /* 資安審批渲染 */
+    function renderSecurityTickets() {
+      const list = document.getElementById("securityPendingList");
+      const keys = Object.keys(pendingTickets);
+      const badge = document.getElementById("secCountBadge");
+
+      if (keys.length === 0) {
+        badge.style.display = "none";
+        list.innerHTML = `<div style="font-size:12px;color:var(--text-muted);">目前沒有待審批的攔截項目。</div>`;
+        return;
+      }
+
+      badge.textContent = String(keys.length);
+      badge.style.display = "inline-block";
+      list.innerHTML = "";
+
+      keys.forEach((tid) => {
+        const t = pendingTickets[tid];
+        const isTx = !!t.requires_pin;
+        const card = document.createElement("div");
+        card.className = `panel-card ${isTx ? "tx-alert" : "risk-alert"}`;
+        card.innerHTML = `
+          <div style="font-weight:700;font-size:13px;color:${isTx ? "#f87171" : "#fbbf24"};">
+            ${isTx ? "🚨 【金流/下單交易攔截】需安全 PIN 碼" : "🛡️ 【高風險操作攔截】待批准"}
+          </div>
+          <div style="font-size:12.5px;font-weight:600;">${t.title}</div>
+          <div style="font-size:12px;color:var(--text-secondary);line-height:1.4;">${t.reason}</div>
+          ${t.screenshot_b64 ? `<img class="screenshot-preview" src="data:image/jpeg;base64,${t.screenshot_b64}" />` : ""}
+          ${
+            isTx
+              ? `<input id="pin_${tid}" type="password" class="form-input" placeholder="請輸入交易安全 PIN 碼放行..." style="margin-top:4px;" />`
+              : ""
+          }
+          <div style="display:flex;gap:8px;margin-top:6px;">
+            <button class="btn-block btn-success" onclick="resolveTicket('${tid}', true)">
+              ${isTx ? "🔐 驗證 PIN 並允許交易" : "✅ 批准執行"}
+            </button>
+            <button class="btn-block btn-danger" onclick="resolveTicket('${tid}', false)">
+              🛑 拒絕攔截
+            </button>
+          </div>
+        `;
+        list.appendChild(card);
+      });
+    }
+
+    function appendSystemAlertToChat(ticket) {
+      const isTx = !!ticket.requires_pin;
+      appendMessage(
+        "agent",
+        `${isTx ? "🚨 **【禁止主動下單攔截】**" : "🛡️ **【高風險操作待確認】**"}\n` +
+          `項目：${ticket.title}\n原因：${ticket.reason}\n` +
+          `👉 請在右側「🛡️ 資安審批」抽屜或你的 **Discord** 頻道進行${isTx ? "安全 PIN 碼驗證" : "批准/拒絕"}。`,
+        { image_b64: ticket.screenshot_b64 }
+      );
+    }
+
+    async function resolveTicket(tid, approved) {
+      const pinEl = document.getElementById(`pin_${tid}`);
+      const pinCode = pinEl ? pinEl.value.trim() : null;
+      const res = await fetch("/api/security/resolve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ticket_id: tid,
+          approved: approved,
+          pin_code: pinCode,
+        }),
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        alert(data.message);
+        return;
+      }
+      delete pendingTickets[tid];
+      renderSecurityTickets();
+    }
+
+    function switchTab(tabName) {
+      ["supervisor", "web", "security"].forEach((t) => {
+        document.getElementById(`tabBtn-${t}`).classList.toggle("active", t === tabName);
+        document.getElementById(`tabBody-${t}`).classList.toggle("active", t === tabName);
+      });
+      if (tabName === "web") {
+        document.getElementById("webCountBadge").style.display = "none";
+        document.getElementById("webCountBadge").textContent = "0";
+      }
+    }
+
+    /* 多組 API Key 管理 UI 邏輯 */
+    async function loadProvidersUI() {
+      const res = await fetch("/api/providers");
+      const data = await res.json();
+      cachedProviders = data.providers || [];
+      renderProvidersList(cachedProviders);
+    }
+
+    function renderProvidersList(providers) {
+      const container = document.getElementById("providersContainer");
+      if (!providers || providers.length === 0) {
+        container.innerHTML = `<div style="font-size:12px;color:var(--text-muted);">尚未新增任何 API Provider，請點擊上方按鈕新增。</div>`;
+        return;
+      }
+
+      container.innerHTML = "";
+      providers.forEach((p) => {
+        const card = document.createElement("div");
+        card.className = `provider-card ${p.has_key ? "has-key" : "no-key"}`;
+        const modelsStr = (p.models || []).join(", ");
+        card.innerHTML = `
+          <div class="provider-header">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <strong style="font-size:13.5px;">${p.name}</strong>
+              <span style="font-size:11px;color:var(--gemini-indigo);background:rgba(129,140,248,0.12);padding:1px 6px;border-radius:4px;">
+                ${p.protocol.toUpperCase()}
+              </span>
+              <span style="font-size:11px;color:${p.has_key ? "var(--accent-green)" : "var(--accent-amber)"};">
+                ${p.has_key ? "● 已填 Key (" + p.masked_key + ")" : "○ 未填 Key"}
+              </span>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button class="btn-pill" style="padding:2px 8px;font-size:11px;" onclick="testProviderConn('${p.id}')">
+                ⚡ 測試連線
+              </button>
+              <button class="btn-pill" style="padding:2px 8px;font-size:11px;" onclick="toggleEditProvider('${p.id}')">
+                ✏️ 編輯
+              </button>
+              <button class="btn-pill danger" style="padding:2px 6px;font-size:11px;" onclick="deleteProvider('${p.id}')">
+                🗑️
+              </button>
+            </div>
+          </div>
+
+          <div style="font-size:11.5px;color:var(--text-secondary);word-break:break-all;">
+            端點：<code>${p.base_url}</code>
+          </div>
+          <div style="font-size:11.5px;color:var(--text-secondary);">
+            模型：<code>${modelsStr}</code>
+          </div>
+
+          <!-- 編輯表單 (預設隱藏) -->
+          <div id="editBox_${p.id}" style="display:none;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border-subtle);display:none;flex-direction:column;gap:8px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+              <div>
+                <label class="form-label">自訂名稱</label>
+                <input id="name_${p.id}" class="form-input" value="${p.name}" />
+              </div>
+              <div>
+                <label class="form-label">協定類型</label>
+                <select id="proto_${p.id}" class="form-select">
+                  <option value="openai" ${p.protocol === "openai" ? "selected" : ""}>OpenAI 兼容 / Gemini</option>
+                  <option value="anthropic" ${p.protocol === "anthropic" ? "selected" : ""}>Anthropic (Claude)</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label class="form-label">Base URL (API 端點)</label>
+              <input id="url_${p.id}" class="form-input" value="${p.base_url}" />
+            </div>
+            <div>
+              <label class="form-label">API Key (留空表示不修改)</label>
+              <div style="display:flex;gap:6px;">
+                <input id="key_${p.id}" type="password" class="form-input" placeholder="${p.has_key ? '已設定（輸入新 Key 可覆寫）' : '貼上 API Key...'}" style="flex:1;" />
+                <button type="button" class="btn-pill" onclick="toggleWebPasswordVisibility('key_${p.id}', this)" title="切換顯示/隱藏 Key">👁️</button>
+              </div>
+            </div>
+            <div>
+              <label class="form-label">支援模型名稱 (以逗號分隔)</label>
+              <input id="models_${p.id}" class="form-input" value="${modelsStr}" />
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:6px;margin-top:4px;">
+              <button class="btn-pill" onclick="toggleEditProvider('${p.id}')">取消</button>
+              <button class="btn-pill" style="background:var(--gemini-indigo);color:white;border:none;" onclick="saveEditedProvider('${p.id}')">
+                💾 儲存此 API
+              </button>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function toggleWebPasswordVisibility(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      if (input.type === "password") {
+        input.type = "text";
+        btn.textContent = "🙈";
+      } else {
+        input.type = "password";
+        btn.textContent = "👁️";
+      }
+    }
+
+    function toggleEditProvider(pid) {
+      const box = document.getElementById(`editBox_${pid}`);
+      if (!box) return;
+      box.style.display = box.style.display === "flex" ? "none" : "flex";
+    }
+
+    async function saveEditedProvider(pid) {
+      const payload = {
+        id: pid,
+        name: document.getElementById(`name_${pid}`).value.trim(),
+        protocol: document.getElementById(`proto_${pid}`).value,
+        base_url: document.getElementById(`url_${pid}`).value.trim(),
+        models: document.getElementById(`models_${pid}`).value.split(",").map(m => m.trim()).filter(Boolean),
+      };
+      const keyInput = document.getElementById(`key_${pid}`).value.trim();
+      if (keyInput) payload.api_key = keyInput;
+
+      const res = await fetch("/api/providers/upsert", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        cachedProviders = data.providers;
+        renderProvidersList(cachedProviders);
+        populateModels(data.models_catalog);
+      }
+    }
+
+    async function deleteProvider(pid) {
+      if (!confirm("確定要刪除這組 API 設定嗎？")) return;
+      const res = await fetch("/api/providers/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: pid }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        cachedProviders = data.providers;
+        renderProvidersList(cachedProviders);
+        populateModels(data.models_catalog);
+      }
+    }
+
+    async function testProviderConn(pid) {
+      const res = await fetch("/api/providers/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: pid }),
+      });
+      const data = await res.json();
+      alert(data.ok ? data.message : `❌ 測試連線失敗：\n${data.error}`);
+    }
+
+    function openAddProviderForm() {
+      const pid = "custom_" + Date.now().toString().slice(-6);
+      const newProv = {
+        id: pid,
+        name: "自訂 API Provider",
+        protocol: "openai",
+        base_url: "https://api.openai.com/v1",
+        api_key: "",
+        models: ["gpt-4o"],
+        has_key: false,
+      };
+      cachedProviders.unshift(newProv);
+      renderProvidersList(cachedProviders);
+      toggleEditProvider(pid);
+    }
+
+    /* 設定面板開關與儲存 */
+    async function openSettingsModal() {
+      const res = await fetch("/api/settings");
+      const data = await res.json();
+      const s = data.settings || {};
+
+      document.getElementById("cfgLanguage").value = s.language || "zh_TW";
+      document.getElementById("cfgDiscordEnabled").checked = !!s.discord?.enabled;
+      document.getElementById("cfgDiscordToken").placeholder = s.discord?.bot_token_masked || "貼上 Bot Token...";
+      document.getElementById("cfgDiscordToken").value = "";
+      document.getElementById("cfgDiscordChannel").value = s.discord?.channel_id || "";
+      document.getElementById("cfgDiscordWebhook").value = s.discord?.webhook_url || "";
+
+      document.getElementById("cfgRedactWindows").checked = s.security?.redact_sensitive_windows !== false;
+      document.getElementById("cfgAutoGame").checked = s.dnd?.auto_detect_game !== false;
+      document.getElementById("cfgAutoVideo").checked = s.dnd?.auto_detect_video !== false;
+      document.getElementById("cfgProtectHomework").checked = s.dnd?.protect_homework_focus !== false;
+      document.getElementById("cfgAutostart").checked = s.autostart_enabled !== false;
+
+      await loadProvidersUI();
+      document.getElementById("settingsModal").classList.add("open");
+    }
+
+    function closeSettingsModal() {
+      document.getElementById("settingsModal").classList.remove("open");
+    }
+
+    async function saveGeneralSettings() {
+      const payload = {
+        language: document.getElementById("cfgLanguage").value,
+        discord: {
+          enabled: document.getElementById("cfgDiscordEnabled").checked,
+          channel_id: document.getElementById("cfgDiscordChannel").value.trim(),
+          webhook_url: document.getElementById("cfgDiscordWebhook").value.trim(),
+        },
+        security: {
+          redact_sensitive_windows: document.getElementById("cfgRedactWindows").checked,
+        },
+        dnd: {
+          auto_detect_game: document.getElementById("cfgAutoGame").checked,
+          auto_detect_video: document.getElementById("cfgAutoVideo").checked,
+          protect_homework_focus: document.getElementById("cfgProtectHomework").checked,
+        },
+        autostart_enabled: document.getElementById("cfgAutostart").checked,
+      };
+
+      const dToken = document.getElementById("cfgDiscordToken").value.trim();
+      if (dToken) payload.discord.bot_token = dToken;
+
+      const newPin = document.getElementById("cfgNewPin").value.trim();
+      if (newPin) payload.security.new_pin = newPin;
+
+      const res = await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        populateModels(data.models_catalog, data.settings?.selected_model);
+        closeSettingsModal();
+      }
+    }
+
+    async function refreshGoogleStatus() {
+      try {
+        const res = await fetch("/api/google/status");
+        const data = await res.json();
+        const btn = document.getElementById("btnGoogleLogin");
+        if (!btn) return;
+        if (data.is_authenticated) {
+          btn.textContent = "🟢 Google 已登入";
+          btn.style.background = "#064e3b";
+          btn.style.color = "#4ade80";
+        } else if (data.has_synced_habits) {
+          btn.textContent = "🟢 習慣已同步";
+          btn.style.background = "#1e3a8a";
+          btn.style.color = "#60a5fa";
+        } else {
+          btn.textContent = "🌐 登入 Google";
+          btn.style.background = "#2563eb";
+          btn.style.color = "#ffffff";
+        }
+      } catch (e) {}
+    }
+
+    async function handleGoogleLoginClick() {
+      const choice = confirm("點擊「確定」立即一鍵同步本機 Chrome 習慣（免密碼快照）。\n若需使用 Google 雲端 API，請在設定中匯入 credentials.json。");
+      if (choice) {
+        const btn = document.getElementById("btnGoogleLogin");
+        if (btn) btn.textContent = "⏳ 正在同步習慣...";
+        try {
+          const res = await fetch("/api/google/sync-habits", { method: "POST" });
+          const data = await res.json();
+          if (data.success) {
+            alert("⚡ 已成功同步本機 Chrome 習慣！Agent 大腦已自動掌握你的高頻工具與作息。");
+          } else {
+            alert("同步提示：" + (data.error || "未知錯誤"));
+          }
+        } catch (e) {
+          alert("請求失敗：" + e);
+        }
+        refreshGoogleStatus();
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      initApp();
+      refreshGoogleStatus();
+    });
+
+    function toggleWebPlusMenu() {
+      const m = document.getElementById("webPlusMenu");
+      if (!m) return;
+      m.style.display = m.style.display === "block" ? "none" : "block";
+    }
+
+    function applyWebFontSize(ptVal) {
+      const pt = Math.max(8, Math.min(24, parseInt(ptVal, 10) || 12));
+      const pct = Math.round((pt / 12) * 100);
+      document.documentElement.style.fontSize = `${pct}%`;
+      const sel = document.getElementById("cfgUiFontSize");
+      if (sel) sel.value = String(pt);
+      const lbl = document.getElementById("lblWebFontSize");
+      if (lbl) lbl.textContent = `${pt} pt (${pct}%)`;
+      fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ui_font_size: pt }),
+      }).catch(() => {});
+    }
+
+    function stepWebFontSize(delta) {
+      const sel = document.getElementById("cfgUiFontSize");
+      const cur = parseInt(sel ? sel.value : "12", 10) || 12;
+      applyWebFontSize(cur + delta * 2);
+    }
+
+    const WEB_GUIDE_SECTIONS = [
+      { title: "🚀 1. 快速入門與介面總覽", body: "左側為檔案總管（預設顯示桌面、下載、文件等常用資料夾並自動記憶上次開啟目錄）與排程專區；中央支援單一分頁、並排監控（亮藍框 #38bdf8 代表目前輸入目標）與代理畫布；右側為監督、技能/MCP 表格與模組化 CDR 防毒中心。" },
+      { title: "🕸 2. 代理畫布卡片自由縮放與多代理並排", body: "在『🕸 代理畫布』中，每個代理對話框與工具卡片右下角皆有『◢』縮放控制角，滑鼠按住右下角即可自由拖曳調整個別代理卡片的寬高（240×175 ~ 780×640），拉大後自動顯示更多對話與終端機輸出。" },
+      { title: "⚡ 3. 快捷指令庫 (/ 與 ＋ 選單) 與本地功能問答", body: "點擊輸入框左下角『＋』按鈕或在輸入框輸入『/』即可開啟清晰可點擊的快捷指令庫。你也可以直接在對話框詢問『桌面整理怎麼還原？』『畫布怎麼調大小？』，代理會透過內建 query_syntra_user_guide 工具精準回答。" },
+      { title: "🧹 4. 桌面整理、一鍵還原與即時用機報告", body: "點擊『🧹 整理桌面』會將散落檔案歸類並寫入 organize_manifest.json；若不滿意，點擊旁邊『↩️ 還原整理』即可 100% 原位復原。點擊『📊 用機報告』會即時統計開發工具（VS Code / Cursor / Python）與瀏覽器專注時長。" },
+      { title: "🛡️ 5. 模組化 CDR 防毒中心、機密文件快照與跨專案開發", body: "防毒與資安採用動態模組化架構（可於設定選單隨時啟用/卸載）；內建 Word/Excel/PDF 機密文件防篡改快照與 0 秒自癒還原。此外，你可直接在此對話框跨專案修改電腦上的其他專案（如 Keli / idea_studiio）。" }
+    ];
+
+    function openGuideModal() {
+      const modal = document.getElementById("guideModal");
+      if (!modal) return;
+      modal.classList.add("open");
+      filterWebGuide("");
+      const inp = document.getElementById("guideSearchInput");
+      if (inp) { inp.value = ""; inp.focus(); }
+    }
+
+    function closeGuideModal() {
+      const modal = document.getElementById("guideModal");
+      if (modal) modal.classList.remove("open");
+    }
+
+    function filterWebGuide(q) {
+      const box = document.getElementById("guideBodyContainer");
+      if (!box) return;
+      const kw = (q || "").trim().toLowerCase();
+      const matched = WEB_GUIDE_SECTIONS.filter(s => !kw || s.title.toLowerCase().includes(kw) || s.body.toLowerCase().includes(kw));
+      box.innerHTML = (matched.length ? matched : WEB_GUIDE_SECTIONS).map(s => `
+        <div class="panel-card" style="margin-bottom:10px;">
+          <strong style="color:#38bdf8;font-size:14px;">${s.title}</strong>
+          <div style="font-size:13px;color:#e2e8f0;line-height:1.6;margin-top:4px;">${s.body}</div>
+        </div>
+      `).join("");
+    }
+  </script>
+
+  <!-- 可搜尋使用說明指南 Modal -->
+  <div id="guideModal" class="modal-backdrop">
+    <div class="modal-box" style="max-width:760px;">
+      <div class="modal-header">
+        <span>📖 Syntra 星樞 · 完整使用說明與分類操作指南 (支援即時搜尋)</span>
+        <button class="btn-pill" onclick="closeGuideModal()">✕ 關閉</button>
+      </div>
+      <div class="modal-content">
+        <input id="guideSearchInput" class="form-input" placeholder="🔍 輸入關鍵字即時搜尋（例如：畫布大小、還原整理、用機報告、字體大小、CDR、跨專案）..." oninput="filterWebGuide(this.value)" style="margin-bottom:12px;border-color:#38bdf8;" />
+        <div id="guideBodyContainer"></div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

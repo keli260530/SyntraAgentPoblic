@@ -1,0 +1,248 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+syntra（Linux 版）— 從終端機遙控 Syntra 星樞的 AI 代理
+只需要 Python 3.7 以上，不用安裝任何套件。
+
+安裝：
+    chmod +x syntra-linux
+    sudo mv syntra-linux /usr/local/bin/syntra      # 或放到 ~/.local/bin/syntra
+
+第一次使用（token 在 Syntra 輸入框打 remote 就會顯示位置）：
+    syntra config --url http://<Syntra 電腦的 IP>:8765
+    syntra config --token                           # 會提示你貼上 token（不會留在指令紀錄）
+
+常用指令：
+    syntra ps                          列出代理
+    syntra new [名稱]                  新增代理
+    syntra kill <編號>                 關閉代理（主控不能關）
+    syntra ask [-a 編號] "任務內容"    交代任務並等待回覆（預設代理 1）
+    syntra ask -a 2 --no-wait "..."    只送出、不等回覆
+    echo "內容" | syntra ask -a 2 -    從標準輸入讀任務
+    syntra stop <編號>                 停止代理正在跑的這一輪
+    syntra log <編號> [-n 10]          看最近的對話
+    syntra approvals                   列出等待批准的操作（無介面伺服器模式）
+    syntra approve <id> [--pin]        批准；deny <id> 拒絕
+
+設定優先順序：環境變數 SYNTRA_URL / SYNTRA_TOKEN ＞ ~/.config/syntra/config.json
+
+MIT License — 可自由使用、修改與散布。
+"""
+import argparse
+import getpass
+import json
+import os
+import sys
+import time
+import urllib.error
+import urllib.request
+from pathlib import Path
+
+VERSION = "1.0.0"
+PLATFORM = "linux"
+DEFAULT_URL = "http://127.0.0.1:8765"
+CONFIG_DIR = Path(os.environ.get("XDG_CONFIG_HOME") or (Path.home() / ".config")) / "syntra"
+CONFIG_FILE = CONFIG_DIR / "config.json"
+STATUS = {"IDLE": "待命", "RUNNING": "執行中", "DONE": "完成", "ERROR": "錯誤"}
+
+
+def _secure_write(path: Path, text: str):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd = os.open(str(path), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        f.write(text)
+    os.chmod(str(path), 0o600)
+
+
+# ════════════════════ 以下與 Windows 版相同 ════════════════════
+
+def load_config() -> dict:
+    cfg = {}
+    if CONFIG_FILE.is_file():
+        try:
+            cfg = json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
+        except Exception:
+            cfg = {}
+    if os.environ.get("SYNTRA_URL"):
+        cfg["url"] = os.environ["SYNTRA_URL"]
+    if os.environ.get("SYNTRA_TOKEN"):
+        cfg["token"] = os.environ["SYNTRA_TOKEN"]
+    cfg.setdefault("url", DEFAULT_URL)
+    return cfg
+
+
+def call(method: str, path: str, body=None):
+    cfg = load_config()
+    token = (cfg.get("token") or "").strip()
+    if not token:
+        sys.exit("還沒設定 token：請先執行  syntra config --token\n"
+                 "（token 在 Syntra 輸入框打 remote 就會顯示檔案位置）")
+    url = cfg["url"].rstrip("/") + path
+    data = json.dumps(body).encode("utf-8") if body is not None else None
+    req = urllib.request.Request(url, data=data, method=method)
+    req.add_header("Authorization", f"Bearer {token}")
+    req.add_header("User-Agent", f"syntra-cli/{VERSION} ({PLATFORM})")
+    if data is not None:
+        req.add_header("Content-Type", "application/json")
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            return json.loads(r.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        try:
+            msg = json.loads(e.read().decode("utf-8")).get("error")
+        except Exception:
+            msg = str(e)
+        sys.exit(f"錯誤（HTTP {e.code}）：{msg}")
+    except urllib.error.URLError as e:
+        sys.exit(f"連不到 Syntra（{url}）：{e.reason}\n請確認 Syntra 正在執行，以及網址是否正確（syntra config --url ...）")
+
+
+def _check(res):
+    if not res.get("ok", False):
+        sys.exit(f"失敗：{res.get('error', res)}")
+    return res
+
+
+def cmd_config(a):
+    cfg = {}
+    if CONFIG_FILE.is_file():
+        try:
+            cfg = json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
+        except Exception:
+            cfg = {}
+    changed = False
+    if a.url:
+        cfg["url"] = a.url.rstrip("/")
+        changed = True
+    if a.token is not None:
+        if a.token == "-":
+            tok = sys.stdin.readline()  # 從標準輸入讀（給腳本用）
+        elif a.token == "":
+            tok = getpass.getpass("請貼上 token（輸入時不會顯示）：")
+        else:
+            tok = a.token
+        cfg["token"] = tok.strip()
+        changed = True
+    if changed:
+        _secure_write(CONFIG_FILE, json.dumps(cfg, ensure_ascii=False, indent=2))
+        print(f"已儲存設定：{CONFIG_FILE}")
+    eff = load_config()
+    tok = eff.get("token") or ""
+    print(f"網址：{eff['url']}")
+    print(f"token：{(tok[:4] + '…' + tok[-4:]) if len(tok) > 8 else ('（未設定）' if not tok else '已設定')}")
+
+
+def cmd_ps(_a):
+    agents = _check(call("GET", "/v1/agents"))["agents"]
+    print(f"{'編號':<4} {'狀態':<6} 名稱")
+    for ag in agents:
+        mark = "*" if ag.get("active") else " "
+        print(f"{mark}{ag['no']:<3} {STATUS.get(ag['status'], ag['status']):<6} {ag['name']}")
+
+
+def cmd_new(a):
+    res = _check(call("POST", "/v1/agents", {"name": " ".join(a.name) if a.name else None}))
+    print(f"已新增 #{res['no']} {res['name']}")
+
+
+def cmd_kill(a):
+    res = _check(call("DELETE", f"/v1/agents/{a.no}"))
+    print(f"已關閉 #{a.no} {res.get('closed', '')}")
+
+
+def cmd_stop(a):
+    res = _check(call("POST", f"/v1/agents/{a.no}/stop"))
+    print("已停止" if res.get("stopped") else "這個代理目前沒有在執行")
+
+
+def cmd_log(a):
+    res = _check(call("GET", f"/v1/agents/{a.no}/messages?after=-1"))
+    for m in res["messages"][-a.n:]:
+        who = "你" if m["role"] == "user" else "代理"
+        print(f"── {who} ──\n{m['text']}\n")
+
+
+def cmd_ask(a):
+    text = " ".join(a.text)
+    if text == "-":
+        text = sys.stdin.read()
+    if not text.strip():
+        sys.exit("任務內容是空的")
+    res = _check(call("POST", f"/v1/agents/{a.agent}/ask", {"text": text}))
+    after = res["after"]
+    if a.no_wait:
+        print(f"已送給代理 #{a.agent}")
+        return
+    print(f"已送給代理 #{a.agent}，等待回覆中…（Ctrl+C 只會停止等待，要停止代理請用 syntra stop {a.agent}）",
+          file=sys.stderr)
+    deadline = time.time() + a.timeout
+    try:
+        while time.time() < deadline:
+            time.sleep(1.5)
+            r = _check(call("GET", f"/v1/agents/{a.agent}/messages?after={after}"))
+            replies = [m for m in r["messages"] if m["role"] != "user"]
+            if replies and not r.get("running"):
+                for m in replies:
+                    print(m["text"])
+                return
+    except KeyboardInterrupt:
+        sys.exit(f"\n已停止等待；代理仍在執行，之後可用 syntra log {a.agent} 查看結果")
+    sys.exit(f"等候逾時（{a.timeout} 秒）。之後可用 syntra log {a.agent} 查看結果")
+
+
+def cmd_approvals(_a):
+    items = _check(call("GET", "/v1/approvals"))["approvals"]
+    if not items:
+        print("目前沒有等待批准的操作")
+    for ap in items:
+        pin = "（需 PIN）" if ap.get("requires_pin") else ""
+        print(f"{ap['id']}  [{ap['risk_level']}]{pin} {ap['title']}")
+        print(f"    {ap['reason']}")
+
+
+def cmd_resolve(a):
+    pin = None
+    if a.cmd == "approve" and a.pin:
+        pin = getpass.getpass("安全 PIN 碼：")
+    res = call("POST", f"/v1/approvals/{a.id}", {"approved": a.cmd == "approve", "pin": pin})
+    print(res.get("message") or res.get("error"))
+    if not res.get("ok"):
+        sys.exit(1)
+
+
+def main():
+    p = argparse.ArgumentParser(prog="syntra", description="從終端機遙控 Syntra 星樞的 AI 代理")
+    p.add_argument("--version", action="version", version=f"syntra-cli {VERSION} ({PLATFORM})")
+    sub = p.add_subparsers(dest="cmd")
+    s = sub.add_parser("config", help="設定連線網址與 token")
+    s.add_argument("--url", help="Syntra 遙控 API 網址，例如 http://192.168.1.10:8765")
+    s.add_argument("--token", nargs="?", const="", help="設定 token（不帶值會提示輸入；- 代表從標準輸入讀）")
+    s.set_defaults(fn=cmd_config)
+    sub.add_parser("ps", help="列出代理").set_defaults(fn=cmd_ps)
+    s = sub.add_parser("new", help="新增代理"); s.add_argument("name", nargs="*"); s.set_defaults(fn=cmd_new)
+    s = sub.add_parser("kill", help="關閉代理"); s.add_argument("no", type=int); s.set_defaults(fn=cmd_kill)
+    s = sub.add_parser("stop", help="停止這一輪"); s.add_argument("no", type=int); s.set_defaults(fn=cmd_stop)
+    s = sub.add_parser("log", help="看最近的對話"); s.add_argument("no", type=int)
+    s.add_argument("-n", type=int, default=10); s.set_defaults(fn=cmd_log)
+    s = sub.add_parser("ask", help="交代任務")
+    s.add_argument("-a", "--agent", type=int, default=1, help="代理編號（預設 1）")
+    s.add_argument("--no-wait", action="store_true", help="送出後不等回覆")
+    s.add_argument("--timeout", type=int, default=600, help="最多等幾秒（預設 600）")
+    s.add_argument("text", nargs="+", help="任務內容；用 - 代表從標準輸入讀")
+    s.set_defaults(fn=cmd_ask)
+    sub.add_parser("approvals", help="列出等待批准的操作").set_defaults(fn=cmd_approvals)
+    for name in ("approve", "deny"):
+        s = sub.add_parser(name, help="批准" if name == "approve" else "拒絕")
+        s.add_argument("id")
+        if name == "approve":
+            s.add_argument("--pin", action="store_true", help="交易類操作：提示輸入安全 PIN 碼")
+        s.set_defaults(fn=cmd_resolve)
+    a = p.parse_args()
+    if not getattr(a, "fn", None):
+        p.print_help()
+        return
+    a.fn(a)
+
+
+if __name__ == "__main__":
+    main()

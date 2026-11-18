@@ -1,0 +1,168 @@
+# ============================================================
+# Syntra 星樞 - .gitignore
+# ============================================================
+
+# 原則：版本庫裡只放「乾淨的程式碼」。使用者個資、對話紀錄、學習紀錄、MCP／skill 設定、
+#       金鑰、模型權重、打包產物一律不上傳。
+# 注意：要排除整個資料夾又想保留裡面的 .gitkeep，必須寫成「資料夾/*」，
+#       寫成「資料夾/」時 git 不會再看裡面，後面的 ! 例外規則會失效。
+
+# ---------- 使用者個資與對話紀錄（嚴禁上傳） ----------
+# user_profile/：對話紀錄 chat_history、個人檔案、情境模式、工作區設定
+user_profile/*
+!user_profile/.gitkeep
+**/chat_history/
+**/conversations/
+*.chat.json
+
+# ---------- 執行期資料（含金鑰、MCP 設定、學習紀錄、稽核日誌、樣本） ----------
+# data/ 內有：API 金鑰（api_providers.json）、MCP 伺服器設定（mcp_servers.json）、
+#   設定檔（settings.json）、學到的操作經驗與教訓（app_experience／app_learning）、
+#   軟體知識筆記（app_knowledge）、工具使用紀錄（tool_router/usage.jsonl）、瀏覽紀錄、資料庫、稽核日誌
+data/*
+!data/.gitkeep
+# 若需要提交範例設定，請放成 *.example.json
+!data/*.example.json
+
+# ---------- MCP 與 AI 工具的個人設定 ----------
+.mcp.json
+mcp.json
+**/mcp_servers.json
+claude_desktop_config.json
+.claude/
+CLAUDE.local.md
+.cursor/
+.codex/
+.gemini/
+.windsurf/
+.continue/
+.aider*
+
+# ---------- Skill ----------
+# 開發用的 AI 編碼助理 skill（個人工作流程，不屬於產品）
+.agents/
+skills/
+
+# ---------- 機密 ----------
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.pfx
+*.p12
+credentials.json
+secrets.json
+*secret*.json
+*credential*.json
+!**/*.example.json
+
+# ---------- 本機加密保險庫與憑證快取 ----------
+*.dpapi
+*.vault
+*vault*/
+*.token
+token.txt
+.syntra_vault*
+
+# ---------- 模型訓練：虛擬環境、資料集、輸出權重 ----------
+.venv*/
+training/outputs/
+training/data/
+*.safetensors
+*.gguf
+*.ckpt
+*.pt
+*.pth
+*.onnx
+training_args.bin
+
+# ---------- 螢幕截圖與錄影（可能拍到個資） ----------
+screenshots/
+recordings/
+*.mp4
+*.webm
+
+# ---------- 本機殘留檔 ----------
+/start
+
+# ---------- 日誌與測試產物 ----------
+*.log
+*.jsonl
+*.bak*
+guardian/logs/
+@AutomationLog.txt
+test_anti_tamper.txt
+
+# ---------- 資料庫 / 快取 ----------
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+*.spec
+
+# 虛擬環境
+.venv/
+venv/
+env/
+ENV/
+
+# 測試 / 覆蓋率 / 型別檢查
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# ---------- Node（若 ui/ 使用前端工具） ----------
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# ---------- 編輯器 / 作業系統 ----------
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# ---------- 可執行檔（避免誤傳樣本） ----------
+*.exe
+!Syntra_Setup.exe
+!website/Syntra_Setup.exe
+*.dll
+
+# ---------- 安裝程式狀態（installer 產生的本機紀錄） ----------
+.syntra/
+
+# ---------- 禁止寫入 / 追蹤之審計與未知分支產物 ----------
+*wfx-docs*
+*dependency*audit*
+.github/workflows/*wfx*
+
+# ---------- 加密 DLC 產物、授權紀錄與測試隔離區 ----------
+*.enc
+*.pyd
+dlc_licenses.json
+dlc_content_keys.json
+Syntra_AppTest_Tmp_*
+syntra_dlc_sandbox_*
